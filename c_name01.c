@@ -36,7 +36,7 @@ int lex();
 /* main driver */
 int main() {
 	/* Open the input data file and process its contents */
-	if (fopen_s(&in_fp, "C:\\Users\\user\\source\\repos\\PL_Assignment1\\front.in", "r") == NULL)
+	if (fopen_s(&in_fp, "C:\\Users\\user\\source\\repos\\PL_Assignment1\\front.in.txt", "r") == NULL)
 		printf("ERROR - cannot open front.in \n");
 	else {
 		getChar();
