@@ -13,93 +13,146 @@ LEFT_PAREN = 25
 RIGHT_PAREN = 26
 BIGGER_OP = 27
 SMALLER_OP = 28
-SEMI_SEP = 29
+COLON = 29
 LEFT_CURLY_BRAC = 30
 RIGHT_CURLY_BRAC = 31
+EOF = -1
 
 charClass = 0
-nextChar = 'a'
+nextChar = ''
 lexLen = 0
 nextToken = 0
 data = ""
-lexeme = [0 for i in range(100)]
+lexeme = []
+
+lookup_dict = {
+    '=': ASSIGN_OP,
+    '+': ADD_OP,
+    '-': SUB_OP,
+    '*': MULT_OP,
+    '/': DIV_OP,
+    '(': LEFT_PAREN,
+    ')': RIGHT_PAREN,
+    '>': BIGGER_OP,
+    '<': SMALLER_OP,
+    '{': LEFT_CURLY_BRAC,
+    '}': RIGHT_CURLY_BRAC,
+    ':': COLON
+}
+
 
 def addChar():
-    if lexLen <= 98:
-        lexLen = lexLen + 1
-        lexeme[lexLen] = nextChar
-        lexeme[lexLen] = 0
-    else:
-        print(f'Error - lexeme is too long \n')
+    global lexLen, lexeme
 
-def getChar(nextChar):
-    if nextChar != 'EOF':
-        if nextChar.isalpha:
+    if lexLen <= 98:
+        lexeme.append(nextChar)
+        lexLen += 1
+    else:
+        print('Error - lexeme is too long: {}\n'.format(lexLen))
+        input()
+
+
+def getChar(option_remove):
+    global nextChar, charClass
+
+    if len(tokens) > 0:
+        if option_remove==1:
+            nextChar = tokens.pop()
+        else:
+            nextChar = tokens[-1]
+
+        if nextChar.isalpha():
             charClass = LETTER
-        elif nextChar.isdigit:
+
+        elif nextChar.isdigit():
             charClass = DIGIT
-        else :
+
+        else:
             charClass = UNKNOWN
-    else :
-        charClass = 'EOF'
+
+    else:
+        # input()
+        nextChar = 'EOF'
+        charClass = EOF
+
 
 def getNonBlank():
-    while nextChar.isspace:
-        getChar()
+    while nextChar.isspace():
+        getChar(1)
+
 
 def lookup(ch):
     addChar()
-    nextToken = {'=': ASSIGN_OP, '+': ADD_OP, '-': SUB_OP, '*': MULT_OP, '/': DIV_OP, '(': LEFT_PAREN, ')': RIGHT_PAREN, '>': BIGGER_OP, '<': SMALLER_OP, ';': SEMI_SEP, '{': LEFT_CURLY_BRAC, '}': RIGHT_CURLY_BRAC}.get(ch, 'EOF')
-    return nextToken
+    code = lookup_dict.get(ch, -1)
+    return code
+
 
 def isReserved():
-    reserved_words = { "auto", "break", "case", "char", "const", "continue", "default", "do", "int", "long", "register", "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "double", "else", "enum", "extern", "float", "for", "goto", "if" }
+    reserved_words = {"auto", "break", "case", "char", "const", "continue", "default", "do", "int", "long", "register", "return", "short", "signed", "sizeof",
+                      "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "double", "else", "enum", "extern", "float", "for", "goto", "if"}
     for re_word in reserved_words:
         if lexeme == re_word:
             return 1
     return 0
 
+
 def lex():
+    global nextToken, nextChar, lexeme, lexLen
+
+    del lexeme[0:]
     lexLen = 0
+
     getNonBlank()
-    if charClass == LETTER:
+    if charClass == -1:
+        nextToken = -1
+        lexeme.append('EOF')
+
+    elif charClass == LETTER:
         addChar()
-        getChar()
+        getChar(0)
+        a = 0
         while charClass == LETTER or charClass == DIGIT:
+            a += 1
+            getChar(1)
             addChar()
-            getChar()
         if isReserved() == 1:
             nextToken = RESERVED_WORD
-        else :
+        else:
             nextToken = IDENT
-    elif charClass ==  DIGIT:
-        addChar();
-        getChar();
+
+    elif charClass == DIGIT:
+        addChar()
+        getChar(0)
         while charClass == DIGIT:
+            getChar(1)
             addChar()
-            getChar()
-        nextToken = INT_LIT;
-    elif charClass == UNKNOWN:
-        lookup(nextChar);
-        getChar();
-    elif charClass == 'EOF':
-        nextToken = 'EOF'
-        lexeme[0] = 'E'
-        lexeme[1] = 'O'
-        lexeme[2] = 'F'
-        lexeme[3] = 0
-    print(f"Next token is: ", nextToken, "Next lexeme is ", lexeme, "\n")
-    return nextToken
+        nextToken = INT_LIT
 
-f = open("C:/Users/user/source/repos/PL_Assignment1/front02.py", "r")
+    # elif charClass == UNKNOWN:
+    else:
+        nextToken = lookup(nextChar)
+        # addChar()
+        # getChar(1)
+
+    print(f"Next token is: ", nextToken, "Next lexeme is ", ''.join(lexeme))
+
+    return charClass
+
+
+f = open("./front02.py", "r")
 data = f.read()
-print(data)
-tokens = data.split(" ")
 
-for token in tokens:
-    getChar(token)
-    lex()
+data = data.replace('\n', ' ')
+data = data.replace('\t', ' ')
+
+tokens = list(data)
+# print(tokens)
+tokens.reverse()
+
+while True:
+    getChar(1)
+    if lex() == -1:
+        getChar(1)
+        lex()
+        break
 f.close()
-
-#뭐가문제인지 알겠니
-# 95번줄 data=f.read 에서 괄호를 안쳐서 그냥 함수 그 자체를 넣어버린거야  ?????
